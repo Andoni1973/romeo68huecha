@@ -265,8 +265,28 @@ function rTurnos(){
   let th='';
   const LEY_LABELS2={'L':'Laborable','Libre':'Libre','V':'Vacaciones','FM':'Formación','CF':'Comp. Festivos','B':'Baja','SUS':'Sustitución'};
   if(!S.mb.length)th='<p style="color:#4A6580;text-align:center;padding:18px;font-size:13px">Cargando cuadrilla...</p>';
-  else S.mb.forEach(m=>{const t=S.tu[m.id+'_'+hoy]||'',c=TC[t]||'#4A6580',lb=LEY_LABELS2[t]||'Sin asignar';th+=`<div class="mcard"><div class="av">${m.f?`<img src="${m.f}" alt="">`:'👤'}</div><div class="minfo"><div class="mname">${m.nombre}</div><div class="mcargo">${m.cargo}</div></div><div class="tbadge" style="background:${c}33;border-color:${c||'#2A3F52'};color:${c||'#4A6580'}">${lb}</div></div>`;});
-  let mh='';S.mb.forEach(m=>{mh+=`<div class="mcard"><div class="av" onclick="editM('${m.id}')">${m.f?`<img src="${m.f}" alt="">`:'👤'}</div><div class="minfo"><div class="mname">${m.nombre}</div><div class="mcargo">${m.cargo}</div></div><button onclick="delM('${m.id}')" style="background:none;border:none;color:#4A6580;font-size:17px;cursor:pointer">🗑️</button></div>`;});
+  else S.mb.forEach(m=>{const t=S.tu[m.id+'_'+hoy]||'',c=TC[t]||'#4A6580',lb=LEY_LABELS2[t]||'—';th+=`<div class="mcard">
+    <div class="av">${m.f?`<img src="${m.f}" alt="">`:'👤'}</div>
+    <div class="minfo" style="flex:1">
+      <div class="mname">${m.nombre}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+        <div class="tbadge" style="background:${c}33;border-color:${c||'#2A3F52'};color:${c||'#4A6580'}">${lb}</div>
+        ${m.tel1?`<a href="tel:${m.tel1}" style="color:#4FC3F7;font-size:12px;text-decoration:none">📞 ${m.tel1}</a>`:''}
+      </div>
+    </div>
+  </div>`;});
+  let mh='';S.mb.forEach(m=>{mh+=`<div class="mcard" style="flex-wrap:wrap">
+    <div class="av" onclick="editM('${m.id}')">${m.f?`<img src="${m.f}" alt="">`:'👤'}</div>
+    <div class="minfo" style="flex:1;min-width:120px">
+      <div class="mname">${m.nombre}</div>
+      <div class="mcargo">${m.cargo}${m.localidad?` · ${m.localidad}`:''}</div>
+      <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+        ${m.tel1?`<a href="tel:${m.tel1}" style="background:#1565C033;border:1px solid #1565C0;color:#4FC3F7;border-radius:5px;padding:3px 8px;font-size:11px;text-decoration:none">📞 ${m.tel1}</a>`:''}
+        ${m.tel2&&m.tel2!==m.tel1?`<a href="tel:${m.tel2}" style="background:#1565C033;border:1px solid #1565C0;color:#4FC3F7;border-radius:5px;padding:3px 8px;font-size:11px;text-decoration:none">📞 ${m.tel2}</a>`:''}
+      </div>
+    </div>
+    <button onclick="delM('${m.id}')" style="background:none;border:none;color:#4A6580;font-size:17px;cursor:pointer;align-self:flex-start">🗑️</button>
+  </div>`;});
   let cal='';
   if(S.mb.length){
     let hrow='<div class="crow"><div class="cname"></div>';
@@ -301,13 +321,13 @@ function leerVoz(){if(!S.da||S.nivel===null)return;if(S.sp){speechSynthesis.canc
 function showTab(name,btn){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('screen-'+name).classList.add('active');btn.classList.add('active');if(name==='avisos')rAvisos();if(name==='turnos')rTurnos();}
 function save(){localStorage.setItem('r68_mb',JSON.stringify(S.mb));localStorage.setItem('r68_tu',JSON.stringify(S.tu));if(S.sq)localStorage.setItem('r68_sq',S.sq);}
 const DEFAULT_MB=[
-  {id:'1',nombre:'ALIAGA GUTIERREZ, Javier',cargo:'Jefe de Cuadrilla',f:null},
-  {id:'2',nombre:'GABETE RUIZ, Juan',cargo:'Jefe de Cuadrilla adj.',f:null},
-  {id:'3',nombre:'LUNA BOLEA, Luis Antonio',cargo:'Operario Especialista',f:null},
-  {id:'4',nombre:'CORRALES PALACIO, Andoni',cargo:'Operario Especialista',f:null},
-  {id:'5',nombre:'GARCIA PEREZ, Diego',cargo:'Operario Especialista',f:null},
-  {id:'6',nombre:'ZUECO LASHERAS, Jorge',cargo:'Operario Especialista',f:null},
-  {id:'7',nombre:'PETROV KOSTOV, Rumen',cargo:'Operario Especialista',f:null},
+  {id:'1',nombre:'ALIAGA GUTIERREZ, Javier',cargo:'Jefe de Cuadrilla',localidad:'Trasobares',tel1:'695087964',tel2:'695087964',f:null},
+  {id:'2',nombre:'GABETE RUIZ, Juan',cargo:'Jefe de Cuadrilla adj.',localidad:'Lituénigo',tel1:'620785145',tel2:'',f:null},
+  {id:'3',nombre:'LUNA BOLEA, Luis Antonio',cargo:'Operario Especialista',localidad:'Malón',tel1:'630801502',tel2:'',f:null},
+  {id:'4',nombre:'CORRALES PALACIO, Andoni',cargo:'Operario Especialista',localidad:'Zaragoza',tel1:'619769714',tel2:'',f:null},
+  {id:'5',nombre:'GARCIA PEREZ, Diego',cargo:'Operario Especialista',localidad:'Malón',tel1:'675398796',tel2:'976642896',f:null},
+  {id:'6',nombre:'ZUECO LASHERAS, Jorge',cargo:'Operario Especialista',localidad:'Tarazona',tel1:'657396643',tel2:'',f:null},
+  {id:'7',nombre:'PETROV KOSTOV, Rumen',cargo:'Operario Especialista',localidad:'Novallas',tel1:'661041507',tel2:'661041507',f:null},
 ];
 
 // Festivos nacionales + Aragón 2026
