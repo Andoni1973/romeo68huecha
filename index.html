@@ -111,10 +111,12 @@ body{background:#0D1B2A;color:#fff;font-family:system-ui,-apple-system,sans-seri
   <button class="tab" onclick="showTab('meteo',this)"><span class="ti">🌡️</span>METEO</button>
   <button class="tab" onclick="showTab('prevision',this)"><span class="ti">📅</span>PREVISIÓN</button>
   <button class="tab" onclick="showTab('avisos',this)"><span class="ti">⚠️</span>AVISOS</button>
+  <button class="tab" onclick="showTab('operativo',this)"><span class="ti">🚒</span>OPERATIVO</button>
   <button class="tab" onclick="showTab('turnos',this)"><span class="ti">👥</span>TURNOS</button>
 </div>
 
 <div id="screen-dashboard" class="screen active"><div class="loading">⏳ Cargando datos...</div></div>
+<div id="screen-operativo" class="screen"></div>
 <div id="screen-meteo" class="screen"><div class="loading">⏳ Cargando...</div></div>
 <div id="screen-prevision" class="screen"><div class="loading">⏳ Cargando...</div></div>
 <div id="screen-avisos" class="screen"></div>
@@ -318,7 +320,125 @@ function delM(id){if(!confirm('¿Eliminar?'))return;S.mb=S.mb.filter(m=>m.id!==i
 function openSquad(){document.getElementById('squadModal').classList.add('open');}
 function onSquad(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{S.sq=e.target.result;['simg','sip2'].forEach(id=>{document.getElementById(id).src=e.target.result;document.getElementById(id).style.display='';});['semj','sej2'].forEach(id=>document.getElementById(id).style.display='none');save();document.getElementById('squadModal').classList.remove('open');};r.readAsDataURL(f);}
 function leerVoz(){if(!S.da||S.nivel===null)return;if(S.sp){speechSynthesis.cancel();S.sp=false;document.getElementById('vbtn').textContent='🔊';return;}const r=R[S.nivel],d=S.da,txt=`Romeo 68 Huecha. Riesgo actual: ${r.lb}. Temperatura: ${d.t?.toFixed(1)} grados. Humedad: ${d.hu} por ciento. Viento: ${d.v} kilómetros por hora del ${d.dir!=null?dt(d.dir):''}. ${d.sky}.`;const u=new SpeechSynthesisUtterance(txt);u.lang='es-ES';u.rate=0.9;u.onend=()=>{S.sp=false;document.getElementById('vbtn').textContent='🔊';};S.sp=true;document.getElementById('vbtn').textContent='⏹️';speechSynthesis.speak(u);}
-function showTab(name,btn){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('screen-'+name).classList.add('active');btn.classList.add('active');if(name==='avisos')rAvisos();if(name==='turnos')rTurnos();}
+// ── Rotación 5+3 desde 2026-06-01 ──────────────────────────────
+const ROT_INICIO=new Date('2026-06-01');
+const ROT_TRABAJO=5, ROT_LIBRE=3, ROT_CICLO=ROT_TRABAJO+ROT_LIBRE;
+
+function diasDesdeInicio(fechaStr){
+  const f=new Date(fechaStr+'T00:00:00');
+  return Math.floor((f-ROT_INICIO)/(1000*60*60*24));
+}
+
+function estadoRotacion(fechaStr){
+  const d=diasDesdeInicio(fechaStr);
+  if(d<0) return null; // antes del inicio
+  const pos=d%ROT_CICLO;
+  return pos<ROT_TRABAJO?'L':'Libre';
+}
+
+function infoRotacion(fechaStr){
+  const d=diasDesdeInicio(fechaStr);
+  if(d<0) return null;
+  const pos=d%ROT_CICLO;
+  if(pos<ROT_TRABAJO){
+    return{tipo:'trabajo',diaActual:pos+1,total:ROT_TRABAJO,quedan:ROT_TRABAJO-pos-1};
+  } else {
+    const lPos=pos-ROT_TRABAJO;
+    return{tipo:'libre',diaActual:lPos+1,total:ROT_LIBRE,quedan:ROT_LIBRE-lPos-1};
+  }
+}
+
+function aplicarRotacion5x3(){
+  const ids=['1','2','3','4','5','6','7'];
+  // Recorre desde junio hasta fin de año
+  for(let mes=6;mes<=12;mes++){
+    const nd=new Date(2026,mes,0).getDate();
+    for(let dia=1;dia<=nd;dia++){
+      const fStr=`2026-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+      const est=estadoRotacion(fStr);
+      if(est){
+        ids.forEach(id=>{
+          // Solo sobrescribir si no es festivo/domingo (ya marcados como Libre)
+          const k=id+'_'+fStr;
+          if(S.tu[k]!=='FM'&&S.tu[k]!=='CF'&&S.tu[k]!=='B'&&S.tu[k]!=='V'&&S.tu[k]!=='SUS'){
+            S.tu[k]=est;
+          }
+        });
+      }
+    }
+  }
+  save();
+}
+
+let opFecha=new Date().toISOString().slice(0,10);
+
+function rOperativo(){
+  const f=opFecha;
+  const fechaObj=new Date(f+'T12:00:00');
+  const fechaLabel=fechaObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  const info=infoRotacion(f);
+
+  // Quién trabaja y quién libra según el calendario
+  const trabajando=[], librando=[];
+  S.mb.forEach(m=>{
+    const t=S.tu[m.id+'_'+f]||'';
+    if(t==='L') trabajando.push(m);
+    else librando.push(m);
+  });
+
+  let infoRot='';
+  if(info){
+    const color=info.tipo==='trabajo'?'#2E7D32':'#4A6580';
+    const emoji=info.tipo==='trabajo'?'💼':'🏖️';
+    const label=info.tipo==='trabajo'?'JORNADA DE TRABAJO':'LIBRANZA';
+    infoRot=`<div style="background:${color}22;border:1px solid ${color};border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+      <div style="font-size:28px">${emoji}</div>
+      <div style="color:#fff;font-size:18px;font-weight:bold;letter-spacing:2px;margin:6px 0">${label}</div>
+      <div style="color:#8FA8BE;font-size:13px">Día ${info.diaActual} de ${info.total} · ${info.quedan===0?'Último día':'Quedan '+info.quedan+' día'+(info.quedan!==1?'s':'')}</div>
+    </div>`;
+  } else {
+    infoRot=`<div style="background:#1B2B3A;border:1px solid #2A3F52;border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+      <div style="color:#8FA8BE;font-size:13px">Rotación 5+3 comienza el 1 de junio</div>
+    </div>`;
+  }
+
+  const mkLista=(arr,titulo,color,emoji)=>{
+    if(!arr.length) return '';
+    const items=arr.map(m=>`<div class="mcard">
+      <div class="av">${m.f?`<img src="${m.f}" alt="">`:'👤'}</div>
+      <div class="minfo" style="flex:1">
+        <div class="mname">${m.nombre}</div>
+        <div class="mcargo">${m.cargo}</div>
+        ${m.tel1?`<a href="tel:${m.tel1}" style="color:#4FC3F7;font-size:12px;text-decoration:none;margin-top:4px;display:inline-block">📞 ${m.tel1}</a>`:''}
+      </div>
+      <div style="font-size:22px">${emoji}</div>
+    </div>`).join('');
+    return `<div class="lbl" style="color:${color}">${titulo} (${arr.length})</div>${items}`;
+  };
+
+  document.getElementById('screen-operativo').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0 8px">
+      <button onclick="navOp(-1)" style="background:#1B2B3A;border:1px solid #2A3F52;color:#fff;border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer">◀</button>
+      <div style="text-align:center">
+        <div style="font-weight:bold;font-size:15px;color:#fff;text-transform:capitalize">${fechaLabel}</div>
+        ${f===new Date().toISOString().slice(0,10)?'<div style="background:#E84118;color:#fff;font-size:10px;font-weight:bold;padding:2px 10px;border-radius:4px;letter-spacing:1px;display:inline-block;margin-top:3px">HOY</div>':''}
+      </div>
+      <button onclick="navOp(1)" style="background:#1B2B3A;border:1px solid #2A3F52;color:#fff;border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer">▶</button>
+    </div>
+    ${infoRot}
+    ${mkLista(trabajando,'TRABAJANDO','#2E7D32','✅')}
+    ${mkLista(librando,'DE LIBRANZA','#4A6580','🏖️')}
+  `;
+}
+
+function navOp(d){
+  const f=new Date(opFecha+'T12:00:00');
+  f.setDate(f.getDate()+d);
+  opFecha=f.toISOString().slice(0,10);
+  rOperativo();
+}
+
+function showTab(name,btn){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('screen-'+name).classList.add('active');btn.classList.add('active');if(name==='avisos')rAvisos();if(name==='turnos')rTurnos();if(name==='operativo')rOperativo();}
 function save(){localStorage.setItem('r68_mb',JSON.stringify(S.mb));localStorage.setItem('r68_tu',JSON.stringify(S.tu));if(S.sq)localStorage.setItem('r68_sq',S.sq);}
 const DEFAULT_MB=[
   {id:'1',nombre:'ALIAGA GUTIERREZ, Javier',cargo:'Jefe de Cuadrilla',localidad:'Trasobares',tel1:'695087964',tel2:'695087964',f:null},
@@ -361,12 +481,15 @@ function loadSaved(){
   if(!S.mb.length){S.mb=DEFAULT_MB;save();}
   try{S.tu=JSON.parse(localStorage.getItem('r68_tu'))||{};}catch{S.tu={};}
   // Si no hay datos de turno, cargar plantilla SARCA 2026
-  if(!Object.keys(S.tu).length){S.tu=generarTurnosSARCA();save();}
+  if(!Object.keys(S.tu).length){S.tu=generarTurnosSARCA();}
   const sq=localStorage.getItem('r68_sq');
   if(sq){S.sq=sq;['simg','sip2'].forEach(id=>{document.getElementById(id).src=sq;document.getElementById(id).style.display='';});['semj','sej2'].forEach(id=>document.getElementById(id).style.display='none');}
 }
 
-loadSaved();loadData();setInterval(loadData,30*60*1000);
+loadSaved();
+// Aplicar rotación 5+3 desde junio (solo si no está ya guardada)
+if(!localStorage.getItem('r68_rot53')){aplicarRotacion5x3();localStorage.setItem('r68_rot53','1');}
+loadData();setInterval(loadData,30*60*1000);
 </script>
 </body>
 </html>
