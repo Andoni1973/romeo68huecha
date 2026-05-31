@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0D1B2A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Romeo 68 Huecha</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D1B2A;color:#fff;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+.header{background:#1B2B3A;padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #2A3F52;position:sticky;top:0;z-index:10}
+.squad-icon{width:42px;height:42px;border-radius:50%;background:#0D1B2A;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;cursor:pointer;border:2px solid #2A3F52}
+.squad-icon img{width:100%;height:100%;object-fit:cover}
+.header h1{font-size:15px;font-weight:bold;letter-spacing:1px}
+.header p{font-size:11px;color:#8FA8BE;margin-top:1px}
+.voice-btn{margin-left:auto;background:none;border:none;color:#8FA8BE;font-size:22px;cursor:pointer;padding:6px}
+.tabs{display:flex;background:#1B2B3A;border-bottom:1px solid #2A3F52;overflow-x:auto}
+.tab{flex:1;min-width:55px;padding:10px 4px 8px;text-align:center;border:none;background:none;color:#4A6580;font-size:9px;font-weight:bold;letter-spacing:.5px;cursor:pointer;border-bottom:3px solid transparent}
+.tab.active{color:#E84118;border-bottom-color:#E84118}
+.tab .ti{font-size:17px;display:block;margin-bottom:2px}
+.screen{display:none;padding:14px 14px 50px}
+.screen.active{display:block}
+.lbl{color:#4A6580;font-size:10px;font-weight:bold;letter-spacing:2px;margin:14px 0 8px}
+.risk-box{border-radius:14px;border:2px solid;padding:26px;text-align:center}
+.risk-title{font-size:30px;font-weight:bold;letter-spacing:4px}
+.risk-sub{font-size:13px;margin-top:5px;opacity:.8}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.card{background:#1B2B3A;border:1px solid #2A3F52;border-radius:12px;padding:12px;text-align:center}
+.card .ci{font-size:20px;margin-bottom:5px}
+.card .cv{font-size:20px;font-weight:bold}
+.card .cu{font-size:12px;color:#8FA8BE}
+.card .cl{font-size:10px;color:#8FA8BE;margin-top:3px}
+.cielo{background:#1B2B3A;border:1px solid #2A3F52;border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:9px;margin-bottom:8px;font-size:13px;color:#8FA8BE}
+.sem{display:flex;gap:5px;margin-bottom:8px}
+.si{flex:1;border:1px solid;border-radius:8px;padding:9px 3px;text-align:center}
+.sd{width:11px;height:11px;border-radius:3px;margin:0 auto 3px}
+.sl{font-size:7px;font-weight:bold;letter-spacing:.3px}
+.hcard{background:#1B2B3A;border:1px solid #2A3F52;border-radius:11px;padding:13px;margin-bottom:9px}
+.hcard.now{border-color:#E84118}
+.hhead{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.htime{font-size:17px;font-weight:bold;min-width:50px}
+.ntag{background:#E84118;color:#fff;font-size:8px;font-weight:bold;padding:2px 7px;border-radius:4px;letter-spacing:1px}
+.hsky{color:#8FA8BE;font-size:12px}
+.row{display:flex;align-items:center;padding:3px 0;gap:7px}
+.ri{width:20px;font-size:15px}
+.rl{color:#8FA8BE;font-size:12px;flex:1}
+.rv{font-size:13px;font-weight:600}
+.dcard{background:#1B2B3A;border:1px solid #2A3F52;border-radius:11px;padding:13px;margin-bottom:9px}
+.dfecha{width:42px;text-align:center;flex-shrink:0}
+.dsem{font-size:9px;font-weight:bold;letter-spacing:1px;color:#8FA8BE}
+.dnum{font-size:19px;font-weight:bold}
+.rpill{border:1px solid;border-radius:5px;padding:2px 7px;font-size:9px;font-weight:bold;letter-spacing:1px}
+.dsky{color:#8FA8BE;font-size:11px;flex:1}
+.params{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}
+.par{display:flex;align-items:center;gap:3px;font-size:12px}
+.mapimg{width:100%;border-radius:9px;margin-bottom:6px}
+.mapcap{color:#4A6580;font-size:9px;text-align:center;margin-bottom:9px}
+.mtog{display:flex;gap:7px;margin-bottom:9px}
+.tbtn{border:1px solid #2A3F52;background:none;color:#8FA8BE;border-radius:7px;padding:5px 14px;font-size:11px;font-weight:bold;cursor:pointer}
+.tbtn.a{background:#E84118;border-color:#E84118;color:#fff}
+.noalerts{background:#1B2B3A;border:1px solid #1B5E20;border-radius:11px;padding:28px;text-align:center;color:#4CAF50}
+.mcard{background:#1B2B3A;border:1px solid #2A3F52;border-radius:9px;padding:11px;display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.av{width:42px;height:42px;border-radius:50%;background:#2A3F52;display:flex;align-items:center;justify-content:center;font-size:19px;overflow:hidden;flex-shrink:0;cursor:pointer}
+.av img{width:100%;height:100%;object-fit:cover}
+.minfo{flex:1}
+.mname{font-weight:600;font-size:13px}
+.mcargo{color:#8FA8BE;font-size:11px}
+.tbadge{border:1px solid;border-radius:5px;padding:3px 7px;font-size:10px;font-weight:bold}
+.addbtn{background:#E84118;color:#fff;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:bold;cursor:pointer}
+.secrow{display:flex;align-items:center;justify-content:space-between;margin:14px 0 8px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:flex-end}
+.overlay.open{display:flex}
+.modal{background:#1B2B3A;border-radius:18px 18px 0 0;padding:22px;width:100%}
+.modal h2{font-size:17px;font-weight:bold;margin-bottom:18px}
+.inp{background:#0D1B2A;color:#fff;border:1px solid #2A3F52;border-radius:7px;padding:11px;width:100%;font-size:13px;margin-bottom:9px}
+.mbtns{display:flex;gap:9px;margin-top:9px}
+.bcnl{flex:1;padding:13px;border:1px solid #2A3F52;border-radius:7px;background:none;color:#8FA8BE;font-weight:600;cursor:pointer;font-size:13px}
+.bsave{flex:1;padding:13px;background:#E84118;border:none;border-radius:7px;color:#fff;font-weight:bold;cursor:pointer;font-size:13px}
+.ppick{width:65px;height:65px;border-radius:50%;background:#0D1B2A;border:2px dashed #2A3F52;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;margin:0 auto 14px;overflow:hidden}
+.ppick img{width:100%;height:100%;object-fit:cover}
+.calwrap{overflow-x:auto;margin-bottom:9px}
+.crow{display:flex;align-items:center}
+.cname{width:60px;font-size:10px;color:#8FA8BE;padding-right:5px;flex-shrink:0}
+.cdh{width:28px;text-align:center;padding:3px 0;flex-shrink:0}
+.cdn{font-size:10px;font-weight:bold}
+.cds{font-size:8px;color:#4A6580}
+.cc{width:28px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.cdot{width:13px;height:13px;border-radius:3px}
+.leyenda{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:7px}
+.li{display:flex;align-items:center;gap:3px;font-size:9px;color:#8FA8BE}
+.ldot{width:9px;height:9px;border-radius:2px}
+.hoy{background:rgba(232,65,24,.1);border-radius:5px}
+.info{background:#1B2B3A;border:1px solid #2A3F52;border-radius:9px;padding:11px;display:flex;gap:7px;margin-top:11px;font-size:10px;color:#8FA8BE;line-height:15px}
+.loading{text-align:center;padding:36px;color:#8FA8BE;font-size:14px}
+.errbanner{background:#1A1500;border:1px solid #FFD600;border-radius:7px;padding:9px 11px;color:#FFD600;font-size:11px;margin-bottom:11px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="squad-icon" id="sib" onclick="openSquad()">
+    <img id="simg" src="" style="display:none" alt=""><span id="semj">🔥</span>
+  </div>
+  <div><h1>ROMEO 68 HUECHA</h1><p>Borja, Zaragoza</p></div>
+  <button class="voice-btn" id="vbtn" onclick="leerVoz()">🔊</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('dashboard',this)"><span class="ti">🔥</span>ROMEO 68</button>
+  <button class="tab" onclick="showTab('meteo',this)"><span class="ti">🌡️</span>METEO</button>
+  <button class="tab" onclick="showTab('prevision',this)"><span class="ti">📅</span>PREVISIÓN</button>
+  <button class="tab" onclick="showTab('avisos',this)"><span class="ti">⚠️</span>AVISOS</button>
+  <button class="tab" onclick="showTab('turnos',this)"><span class="ti">👥</span>TURNOS</button>
+</div>
+
+<div id="screen-dashboard" class="screen active"><div class="loading">⏳ Cargando datos...</div></div>
+<div id="screen-meteo" class="screen"><div class="loading">⏳ Cargando...</div></div>
+<div id="screen-prevision" class="screen"><div class="loading">⏳ Cargando...</div></div>
+<div id="screen-avisos" class="screen"></div>
+<div id="screen-turnos" class="screen"></div>
+
+<div class="overlay" id="memModal">
+  <div class="modal">
+    <h2 id="mtitle">Nuevo miembro</h2>
+    <div class="ppick" id="ppick" onclick="document.getElementById('pinput').click()">
+      <img id="ppreview" src="" style="display:none" alt=""><span id="pemj">👤</span>
+    </div>
+    <input type="file" id="pinput" accept="image/*" style="display:none" onchange="onPhoto(this)">
+    <input class="inp" id="mnombre" placeholder="Nombre y apellidos">
+    <input class="inp" id="mcargo" placeholder="Cargo (Capataz, Peón especialista...)">
+    <input type="hidden" id="meid">
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeModal()">Cancelar</button>
+      <button class="bsave" onclick="saveMember()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="squadModal">
+  <div class="modal">
+    <h2>Icono de la Cuadrilla</h2>
+    <div class="ppick" onclick="document.getElementById('sinput').click()">
+      <img id="sip2" src="" style="display:none" alt=""><span id="sej2">🔥</span>
+    </div>
+    <input type="file" id="sinput" accept="image/*" style="display:none" onchange="onSquad(this)">
+    <div class="mbtns">
+      <button class="bcnl" onclick="document.getElementById('squadModal').classList.remove('open')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LAT=41.8493,LON=-1.5285;
+const R={1:{bg:'#0A2E1A',bc:'#1B5E20',tc:'#4CAF50',lb:'BAJO'},2:{bg:'#2E2A00',bc:'#F9A825',tc:'#FFD600',lb:'MODERADO'},3:{bg:'#2E1800',bc:'#E65100',tc:'#FF6D00',lb:'ALTO'},4:{bg:'#2E0000',bc:'#B71C1C',tc:'#FF1744',lb:'MUY ALTO'},5:{bg:'#1A0030',bc:'#6A1B9A',tc:'#CE93D8',lb:'EXTREMO'}};
+const TC={'Guardia A':'#1565C0','Guardia B':'#2E7D32','Guardia C':'#E65100','Libre':'#4A6580','Vacaciones':'#6A1B9A'};
+const TT=['Guardia A','Guardia B','Guardia C','Libre','Vacaciones'];
+const WM={0:'Despejado',1:'Mayormente despejado',2:'Parcialmente nublado',3:'Nublado',45:'Niebla',51:'Llovizna',61:'Lluvia ligera',63:'Lluvia',80:'Chubascos',95:'Tormenta'};
+const DE=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+let S={h:null,d:null,nivel:null,da:null,mb:[],tu:{},sq:null,md:'hoy',sp:false};
+
+const wm=c=>WM[c]||'Variable';
+const dt=g=>['N','NE','E','SE','S','SO','O','NO'][Math.round(g/45)%8];
+function cr(t,h,v){let p=0;if(t>=40)p+=4;else if(t>=35)p+=3;else if(t>=30)p+=2;else if(t>=25)p+=1;if(h<=15)p+=4;else if(h<=25)p+=3;else if(h<=35)p+=2;else if(h<=45)p+=1;if(v>=60)p+=4;else if(v>=40)p+=3;else if(v>=25)p+=2;else if(v>=15)p+=1;if(p>=10)return 5;if(p>=7)return 4;if(p>=5)return 3;if(p>=3)return 2;return 1;}
+
+async function loadData(){
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weathercode,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,wind_speed_10m_max,precipitation_probability_max,weathercode&timezone=Europe%2FMadrid&forecast_days=7`;
+    const res=await fetch(url);const j=await res.json();
+    S.h=j.hourly;S.d=j.daily;
+    const now=new Date(),h=now.getHours(),ts=now.toISOString().slice(0,10);
+    let i=S.h.time.findIndex(t=>t.startsWith(ts)&&parseInt(t.slice(11,13))===h);if(i<0)i=0;
+    S.da={t:S.h.temperature_2m[i],hu:S.h.relative_humidity_2m[i],v:S.h.wind_speed_10m[i],dir:S.h.wind_direction_10m[i],sky:wm(S.h.weathercode[i])};
+    S.nivel=cr(S.da.t,S.da.hu,S.da.v);
+    rDash();rMeteo();rPrev();
+  }catch(e){document.getElementById('screen-dashboard').innerHTML='<div class="errbanner">⚠️ Sin conexión. Comprueba el internet.</div>';}
+}
+
+function rDash(){
+  if(!S.da)return;
+  const r=R[S.nivel],now=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  let sem='';for(let n=1;n<=5;n++){const sr=R[n],a=n===S.nivel;sem+=`<div class="si" style="border-color:${sr.bc};background:${a?sr.bg:'#1B2B3A'}"><div class="sd" style="background:${sr.tc};opacity:${a?1:.3}"></div><div class="sl" style="color:${a?sr.tc:'#4A6580'}">${sr.lb}</div></div>`;}
+  document.getElementById('screen-dashboard').innerHTML=`
+    <div class="lbl">ÍNDICE DE PELIGRO (IPIF)</div>
+    <div class="risk-box" style="background:${r.bg};border-color:${r.bc};margin-bottom:8px">
+      <div class="risk-title" style="color:${r.tc}">${r.lb}</div>
+      <div class="risk-sub" style="color:${r.tc}">Nivel ${S.nivel} / 5</div>
+    </div>
+    <div style="color:#4A6580;font-size:10px;text-align:center;margin-bottom:14px">Actualizado: ${now}</div>
+    <div class="lbl">CONDICIONES ACTUALES</div>
+    <div class="grid2">
+      <div class="card"><div class="ci">🌡️</div><div class="cv">${S.da.t?.toFixed(1)??'—'}<span class="cu">°C</span></div><div class="cl">Temperatura</div></div>
+      <div class="card"><div class="ci">💧</div><div class="cv">${S.da.hu??'—'}<span class="cu">%</span></div><div class="cl">Humedad</div></div>
+      <div class="card"><div class="ci">💨</div><div class="cv">${S.da.v??'—'}<span class="cu"> km/h</span></div><div class="cl">Viento</div></div>
+      <div class="card"><div class="ci">🧭</div><div class="cv">${S.da.dir!=null?dt(S.da.dir):'—'}</div><div class="cl">Dirección</div></div>
+    </div>
+    <div class="cielo">⛅ ${S.da.sky}</div>
+    <div class="lbl">NIVELES DE REFERENCIA</div>
+    <div class="sem">${sem}</div>`;
+}
+
+function rMeteo(){
+  if(!S.h)return;
+  const now=new Date(),h=now.getHours(),ts=now.toISOString().slice(0,10);
+  let html='',c=0;
+  for(let i=0;i<S.h.time.length&&c<24;i++){
+    const t=S.h.time[i],f=t.slice(0,10),hr=parseInt(t.slice(11,13));
+    if(f===ts&&hr<h)continue;c++;
+    const isN=f===ts&&hr===h,dir=S.h.wind_direction_10m[i],ll=S.h.precipitation[i];
+    html+=`<div class="hcard${isN?' now':''}">
+      <div class="hhead"><span class="htime" style="${isN?'color:#E84118':''}">${t.slice(11,16)}</span>${isN?'<span class="ntag">AHORA</span>':''}<span class="hsky">${wm(S.h.weathercode[i])}</span></div>
+      <div class="row"><span class="ri">🌡️</span><span class="rl">Temperatura</span><span class="rv">${S.h.temperature_2m[i]?.toFixed(1)??'—'}°C</span></div>
+      <div class="row"><span class="ri">💧</span><span class="rl">Humedad</span><span class="rv">${S.h.relative_humidity_2m[i]??'—'}%</span></div>
+      <div class="row"><span class="ri">💨</span><span class="rl">Viento</span><span class="rv">${S.h.wind_speed_10m[i]??'—'} km/h</span></div>
+      ${dir!=null?`<div class="row"><span class="ri">🧭</span><span class="rl">Dirección</span><span class="rv">${dt(dir)}</span></div>`:''}
+      ${ll>0?`<div class="row"><span class="ri">🌧️</span><span class="rl">Precipitación</span><span class="rv">${ll} mm</span></div>`:''}
+    </div>`;
+  }
+  document.getElementById('screen-meteo').innerHTML='<div class="lbl">CONDICIONES HORARIAS</div>'+html;
+}
+
+function rPrev(){
+  if(!S.d)return;
+  const now=new Date();let html='';
+  S.d.time.forEach((f,i)=>{
+    const dt2=new Date(f+'T12:00:00'),isH=f===now.toISOString().slice(0,10);
+    const nv=cr(S.d.temperature_2m_max[i]||20,S.d.relative_humidity_2m_min[i]||50,S.d.wind_speed_10m_max[i]||10),r=R[nv];
+    html+=`<div class="dcard" style="${isH?'border-color:#E84118':''}">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+        <div class="dfecha"><div class="dsem" style="${isH?'color:#E84118':''}">${isH?'HOY':DE[dt2.getDay()]}</div><div class="dnum">${dt2.getDate()}</div></div>
+        <div class="rpill" style="background:${r.bg};border-color:${r.bc};color:${r.tc}">${r.lb}</div>
+        <span class="dsky">${wm(S.d.weathercode[i])}</span>
+      </div>
+      <div class="params">
+        <span class="par">🌡️ ${S.d.temperature_2m_max[i]??'—'}°/${S.d.temperature_2m_min[i]??'—'}°</span>
+        <span class="par">💧 ${S.d.relative_humidity_2m_min[i]??'—'}–${S.d.relative_humidity_2m_max[i]??'—'}%</span>
+        <span class="par">💨 ${S.d.wind_speed_10m_max[i]??'—'} km/h</span>
+        ${S.d.precipitation_probability_max[i]>0?`<span class="par">🌧️ ${S.d.precipitation_probability_max[i]}%</span>`:''}
+      </div>
+    </div>`;
+  });
+  document.getElementById('screen-prevision').innerHTML='<div class="lbl">PREVISIÓN 7 DÍAS — BORJA</div>'+html;
+}
+
+function rAvisos(){
+  const mu=S.md==='hoy'?'https://www.aemet.es/imagenes_d/eltiempo/prediccion/incendios/hoy/riesgo_estimado_peninsula.gif':'https://www.aemet.es/imagenes_d/eltiempo/prediccion/incendios/manana/riesgo_previsto_peninsula.gif';
+  document.getElementById('screen-avisos').innerHTML=`
+    <div class="lbl">MAPA IPIF OFICIAL AEMET</div>
+    <div class="mtog"><button class="tbtn${S.md==='hoy'?' a':''}" onclick="setMd('hoy')">HOY</button><button class="tbtn${S.md==='mañana'?' a':''}" onclick="setMd('mañana')">MAÑANA</button></div>
+    <img class="mapimg" src="${mu}" alt="Mapa IPIF" onerror="this.style.display='none'">
+    <div class="mapcap">Fuente: AEMET — Peligro estimado Península Ibérica</div>
+    <div class="lbl">AVISOS ACTIVOS — ZARAGOZA</div>
+    <div class="noalerts"><div style="font-size:30px;margin-bottom:9px">✅</div>Sin avisos activos ahora<br><br><small style="color:#4A6580">Consulta aemet.es para más detalle</small></div>
+    <div class="info">ℹ️ <span>Para avisos CAP en tiempo real se necesita API key de AEMET OpenData (gratuita en opendata.aemet.es)</span></div>`;
+}
+function setMd(d){S.md=d;rAvisos();}
+
+function rTurnos(){
+  const hoy=new Date().toISOString().slice(0,10),now=new Date(),y=now.getFullYear(),m=now.getMonth(),nd=new Date(y,m+1,0).getDate();
+  const dias=Array.from({length:nd},(_,i)=>{const d=new Date(y,m,i+1);return{d:i+1,f:d.toISOString().slice(0,10),s:DE[d.getDay()===0?6:d.getDay()-1],h:d.toISOString().slice(0,10)===hoy};});
+  let th='';
+  if(!S.mb.length)th='<p style="color:#4A6580;text-align:center;padding:18px;font-size:13px">Añade miembros de la cuadrilla</p>';
+  else S.mb.forEach(m=>{const t=S.tu[m.id+'_'+hoy]||'Sin asignar',c=TC[t]||'#4A6580';th+=`<div class="mcard"><div class="av">${m.f?`<img src="${m.f}" alt="">`:'👤'}</div><div class="minfo"><div class="mname">${m.nombre}</div><div class="mcargo">${m.cargo}</div></div><div class="tbadge" style="background:${c}33;border-color:${c};color:${c}">${t}</div></div>`;});
+  let mh='';S.mb.forEach(m=>{mh+=`<div class="mcard"><div class="av" onclick="editM('${m.id}')">${m.f?`<img src="${m.f}" alt="">`:'👤'}</div><div class="minfo"><div class="mname">${m.nombre}</div><div class="mcargo">${m.cargo}</div></div><button onclick="delM('${m.id}')" style="background:none;border:none;color:#4A6580;font-size:17px;cursor:pointer">🗑️</button></div>`;});
+  let cal='';
+  if(S.mb.length){
+    let hrow='<div class="crow"><div class="cname"></div>';
+    dias.forEach(d=>{hrow+=`<div class="cdh${d.h?' hoy':''}"><div class="cdn" style="${d.h?'color:#E84118':''}">${d.d}</div><div class="cds">${d.s}</div></div>`;});
+    hrow+='</div>';
+    let brows='';
+    S.mb.forEach(m=>{let row=`<div class="crow"><div class="cname">${m.nombre.split(' ')[0]}</div>`;dias.forEach(d=>{const k=m.id+'_'+d.f,t=S.tu[k],c=TC[t];row+=`<div class="cc${d.h?' hoy':''}" onclick="togT('${m.id}','${d.f}')">${t?`<div class="cdot" style="background:${c}"></div>`:`<span style="color:#4A6580;font-size:12px">·</span>`}</div>`;});row+='</div>';brows+=row;});
+    let ley='<div class="leyenda">';Object.entries(TC).forEach(([t,c])=>{ley+=`<div class="li"><div class="ldot" style="background:${c}"></div>${t}</div>`;});ley+='</div>';
+    cal=`<div class="lbl">CALENDARIO DEL MES</div><div class="calwrap">${hrow+brows}</div>${ley}`;
+  }
+  document.getElementById('screen-turnos').innerHTML=`<div class="lbl">TURNO DE HOY</div>${th}<div class="secrow" style="margin-top:14px"><div class="lbl" style="margin:0">CUADRILLA</div><button class="addbtn" onclick="openNewM()">➕ Añadir</button></div>${mh}${cal}`;
+}
+
+function togT(id,f){const k=id+'_'+f,t=S.tu[k]||TT[0],i=TT.indexOf(t);S.tu[k]=TT[(i+1)%TT.length];save();rTurnos();}
+function openNewM(){document.getElementById('mtitle').textContent='Nuevo miembro';document.getElementById('mnombre').value='';document.getElementById('mcargo').value='';document.getElementById('meid').value='';document.getElementById('ppreview').src='';document.getElementById('ppreview').style.display='none';document.getElementById('pemj').style.display='';document.getElementById('memModal').classList.add('open');}
+function editM(id){const m=S.mb.find(x=>x.id===id);if(!m)return;document.getElementById('mtitle').textContent='Editar miembro';document.getElementById('mnombre').value=m.nombre;document.getElementById('mcargo').value=m.cargo;document.getElementById('meid').value=id;if(m.f){document.getElementById('ppreview').src=m.f;document.getElementById('ppreview').style.display='';document.getElementById('pemj').style.display='none';}else{document.getElementById('ppreview').style.display='none';document.getElementById('pemj').style.display='';}document.getElementById('memModal').classList.add('open');}
+function closeModal(){document.getElementById('memModal').classList.remove('open');}
+function onPhoto(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{document.getElementById('ppreview').src=e.target.result;document.getElementById('ppreview').style.display='';document.getElementById('pemj').style.display='none';};r.readAsDataURL(f);}
+function saveMember(){const n=document.getElementById('mnombre').value.trim();if(!n){alert('Introduce el nombre');return;}const c=document.getElementById('mcargo').value.trim(),fv=document.getElementById('ppreview').src||null,eid=document.getElementById('meid').value;if(eid){S.mb=S.mb.map(m=>m.id===eid?{...m,nombre:n,cargo:c,f:fv&&fv.startsWith('data:')?fv:m.f}:m);}else{S.mb.push({id:Date.now().toString(),nombre:n,cargo:c,f:fv&&fv.startsWith('data:')?fv:null});}save();closeModal();rTurnos();}
+function delM(id){if(!confirm('¿Eliminar?'))return;S.mb=S.mb.filter(m=>m.id!==id);save();rTurnos();}
+function openSquad(){document.getElementById('squadModal').classList.add('open');}
+function onSquad(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{S.sq=e.target.result;['simg','sip2'].forEach(id=>{document.getElementById(id).src=e.target.result;document.getElementById(id).style.display='';});['semj','sej2'].forEach(id=>document.getElementById(id).style.display='none');save();document.getElementById('squadModal').classList.remove('open');};r.readAsDataURL(f);}
+function leerVoz(){if(!S.da||S.nivel===null)return;if(S.sp){speechSynthesis.cancel();S.sp=false;document.getElementById('vbtn').textContent='🔊';return;}const r=R[S.nivel],d=S.da,txt=`Romeo 68 Huecha. Riesgo actual: ${r.lb}. Temperatura: ${d.t?.toFixed(1)} grados. Humedad: ${d.hu} por ciento. Viento: ${d.v} kilómetros por hora del ${d.dir!=null?dt(d.dir):''}. ${d.sky}.`;const u=new SpeechSynthesisUtterance(txt);u.lang='es-ES';u.rate=0.9;u.onend=()=>{S.sp=false;document.getElementById('vbtn').textContent='🔊';};S.sp=true;document.getElementById('vbtn').textContent='⏹️';speechSynthesis.speak(u);}
+function showTab(name,btn){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('screen-'+name).classList.add('active');btn.classList.add('active');if(name==='avisos')rAvisos();if(name==='turnos')rTurnos();}
+function save(){localStorage.setItem('r68_mb',JSON.stringify(S.mb));localStorage.setItem('r68_tu',JSON.stringify(S.tu));if(S.sq)localStorage.setItem('r68_sq',S.sq);}
+function loadSaved(){try{S.mb=JSON.parse(localStorage.getItem('r68_mb'))||[];}catch{S.mb=[];}try{S.tu=JSON.parse(localStorage.getItem('r68_tu'))||{};}catch{S.tu={};}const sq=localStorage.getItem('r68_sq');if(sq){S.sq=sq;['simg','sip2'].forEach(id=>{document.getElementById(id).src=sq;document.getElementById(id).style.display='';});['semj','sej2'].forEach(id=>document.getElementById(id).style.display='none');}}
+
+loadSaved();loadData();setInterval(loadData,30*60*1000);
+</script>
+</body>
+</html>
