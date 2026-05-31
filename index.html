@@ -353,23 +353,64 @@ function infoRotacion(fechaStr){
   }
 }
 
+// Parejas rotativas de libra: 7 pares que cubren todos los trabajadores
+// Cada trabajador libra exactamente 2 veces cada 7 días operativos
+const PAREJAS=[[0,1],[2,3],[4,5],[6,0],[1,2],[3,4],[5,6]];
+
+// L individuales leídos directamente del calendario SARCA (imagen Septiembre)
+// ids: 1=ALIAGA, 2=GABETE, 3=LUNA, 4=CORRALES, 5=GARCIA, 6=ZUECO, 7=PETROV
+const LIBRAS_SEP={
+  '1':['2026-09-01','2026-09-08','2026-09-17','2026-09-25'],
+  '2':['2026-09-01','2026-09-09','2026-09-14','2026-09-22','2026-09-29'],
+  '3':['2026-09-07','2026-09-15','2026-09-16','2026-09-21'],
+  '4':['2026-09-05','2026-09-16','2026-09-23','2026-09-24','2026-09-30'],
+  '5':['2026-09-07','2026-09-08','2026-09-24','2026-09-29'],
+  '6':['2026-09-09','2026-09-14','2026-09-22','2026-09-23','2026-09-30'],
+  '7':['2026-09-05','2026-09-15','2026-09-17','2026-09-21','2026-09-22','2026-09-25']
+};
+
 function aplicarRotacion5x3(){
   const ids=['1','2','3','4','5','6','7'];
-  // Recorre desde junio hasta fin de año
-  for(let mes=6;mes<=12;mes++){
+  const PROT=['FM','CF','B','V','SUS'];
+  let opDayIdx=0;
+
+  for(let mes=3;mes<=12;mes++){
     const nd=new Date(2026,mes,0).getDate();
     for(let dia=1;dia<=nd;dia++){
       const fStr=`2026-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-      const est=estadoRotacion(fStr);
-      if(est){
-        ids.forEach(id=>{
-          // Solo sobrescribir si no es festivo/domingo (ya marcados como Libre)
-          const k=id+'_'+fStr;
-          if(S.tu[k]!=='FM'&&S.tu[k]!=='CF'&&S.tu[k]!=='B'&&S.tu[k]!=='V'&&S.tu[k]!=='SUS'){
-            S.tu[k]=est;
-          }
-        });
+      const f=new Date(2026,mes-1,dia);
+      const esDomingo=f.getDay()===0;
+      const esFestivo=FESTIVOS_2026.has(fStr);
+      if(esDomingo||esFestivo) continue;
+
+      const diasDesde=diasDesdeInicio(fStr);
+      let esOperativo=true;
+      if(diasDesde>=0){
+        const pos=diasDesde%ROT_CICLO;
+        esOperativo=pos<ROT_TRABAJO;
+      } else {
+        const diasDesdeMar=Math.floor((f-new Date('2026-03-01'))/86400000);
+        const pos=((diasDesdeMar%ROT_CICLO)+ROT_CICLO)%ROT_CICLO;
+        esOperativo=pos<ROT_TRABAJO;
       }
+
+      ids.forEach((id,idx)=>{
+        const k=id+'_'+fStr;
+        if(PROT.includes(S.tu[k])) return;
+        if(!esOperativo){
+          S.tu[k]='L'; // descanso de cuadrilla: todos libran
+        } else if(mes===11||mes===12){
+          S.tu[k]=''; // fuera de campaña
+        } else if(mes===9){ // Septiembre: datos leídos de la foto
+          const libras=LIBRAS_SEP[id]||[];
+          S.tu[k]=libras.includes(fStr)?'L':'';
+        } else {
+          // Resto de meses: rotación por parejas (aproximación)
+          const par=PAREJAS[opDayIdx%7];
+          S.tu[k]=par.includes(idx)?'L':'';
+        }
+      });
+      if(esOperativo&&mes!==11&&mes!==12) opDayIdx++;
     }
   }
   save();
@@ -493,7 +534,7 @@ function loadSaved(){
 
 loadSaved();
 // Aplicar rotación 5+3 desde junio (solo si no está ya guardada)
-if(localStorage.getItem('r68_rot53')!=='2'){aplicarRotacion5x3();localStorage.setItem('r68_rot53','2');}
+if(localStorage.getItem('r68_rot53')!=='3'){aplicarRotacion5x3();localStorage.setItem('r68_rot53','3');}
 loadData();setInterval(loadData,30*60*1000);
 </script>
 </body>
