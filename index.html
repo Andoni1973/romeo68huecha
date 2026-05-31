@@ -255,8 +255,12 @@ function rAvisos(){
 }
 function setMd(d){S.md=d;rAvisos();}
 
+let calMes=new Date().getMonth(), calYear=new Date().getFullYear();
+const MESES_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function navMes(d){calMes+=d;if(calMes>11){calMes=0;calYear++;}if(calMes<0){calMes=11;calYear--;}rTurnos();}
+
 function rTurnos(){
-  const hoy=new Date().toISOString().slice(0,10),now=new Date(),y=now.getFullYear(),m=now.getMonth(),nd=new Date(y,m+1,0).getDate();
+  const hoy=new Date().toISOString().slice(0,10),y=calYear,m=calMes,nd=new Date(y,m+1,0).getDate();
   const dias=Array.from({length:nd},(_,i)=>{const d=new Date(y,m,i+1);return{d:i+1,f:d.toISOString().slice(0,10),s:DE[d.getDay()===0?6:d.getDay()-1],h:d.toISOString().slice(0,10)===hoy};});
   let th='';
   const LEY_LABELS2={'L':'Laborable','Libre':'Libre','V':'Vacaciones','FM':'Formación','CF':'Comp. Festivos','B':'Baja','SUS':'Sustitución'};
@@ -272,7 +276,14 @@ function rTurnos(){
     S.mb.forEach(m=>{let row=`<div class="crow"><div class="cname">${m.nombre.split(' ')[0]}</div>`;dias.forEach(d=>{const k=m.id+'_'+d.f,t=S.tu[k],c=TC[t];row+=`<div class="cc${d.h?' hoy':''}" onclick="togT('${m.id}','${d.f}')">${t?`<div class="cdot" style="background:${c}"></div>`:`<span style="color:#4A6580;font-size:12px">·</span>`}</div>`;});row+='</div>';brows+=row;});
     const LEY_LABELS={'L':'Laborable','Libre':'Libre','V':'Vacaciones','FM':'Formación','CF':'Comp. Festivos','B':'Baja','SUS':'Sustitución'};
     let ley='<div class="leyenda">';Object.entries(TC).forEach(([t,c])=>{ley+=`<div class="li"><div class="ldot" style="background:${c}"></div>${LEY_LABELS[t]||t}</div>`;});ley+='</div>';
-    cal=`<div class="lbl">CALENDARIO DEL MES</div><div class="calwrap">${hrow+brows}</div>${ley}`;
+    cal=`<div class="lbl">CALENDARIO</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <button onclick="navMes(-1)" style="background:#1B2B3A;border:1px solid #2A3F52;color:#fff;border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer">◀</button>
+      <span style="font-weight:bold;font-size:15px;color:#fff">${MESES_ES[m]} ${y}</span>
+      <button onclick="navMes(1)" style="background:#1B2B3A;border:1px solid #2A3F52;color:#fff;border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer">▶</button>
+    </div>
+    <p style="color:#4A6580;font-size:11px;margin-bottom:8px">Toca un día para cambiar el estado. Toca varias veces para rotar: L → Libre → V → FM → CF → B → SUS → vacío</p>
+    <div class="calwrap">${hrow+brows}</div>${ley}`;
   }
   document.getElementById('screen-turnos').innerHTML=`<div class="lbl">TURNO DE HOY</div>${th}<div class="secrow" style="margin-top:14px"><div class="lbl" style="margin:0">CUADRILLA</div><button class="addbtn" onclick="openNewM()">➕ Añadir</button></div>${mh}${cal}`;
 }
@@ -298,7 +309,42 @@ const DEFAULT_MB=[
   {id:'6',nombre:'ZUECO LASHERAS, Jorge',cargo:'Operario Especialista',f:null},
   {id:'7',nombre:'PETROV KOSTOV, Rumen',cargo:'Operario Especialista',f:null},
 ];
-function loadSaved(){try{S.mb=JSON.parse(localStorage.getItem('r68_mb'))||[];}catch{S.mb=[];}if(!S.mb.length){S.mb=DEFAULT_MB;save();}try{S.tu=JSON.parse(localStorage.getItem('r68_tu'))||{};}catch{S.tu={};}const sq=localStorage.getItem('r68_sq');if(sq){S.sq=sq;['simg','sip2'].forEach(id=>{document.getElementById(id).src=sq;document.getElementById(id).style.display='';});['semj','sej2'].forEach(id=>document.getElementById(id).style.display='none');}}
+
+// Festivos nacionales + Aragón 2026
+const FESTIVOS_2026=new Set(['2026-01-01','2026-01-06','2026-04-02','2026-04-03','2026-04-23','2026-05-01','2026-08-15','2026-10-12','2026-11-01','2026-12-06','2026-12-08','2026-12-25']);
+// Meses fuera de campaña (sin trabajo)
+const MESES_LIBRE=new Set([1,2,11,12]);
+
+function generarTurnosSARCA(){
+  const tu={};
+  const ids=['1','2','3','4','5','6','7'];
+  for(let mes=1;mes<=12;mes++){
+    const dias=new Date(2026,mes,0).getDate();
+    const fueraCamp=MESES_LIBRE.has(mes);
+    for(let dia=1;dia<=dias;dia++){
+      const f=new Date(2026,mes-1,dia);
+      const fStr=`2026-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+      const esDomingo=f.getDay()===0;
+      const esFestivo=FESTIVOS_2026.has(fStr);
+      ids.forEach(id=>{
+        const k=id+'_'+fStr;
+        if(fueraCamp||esDomingo||esFestivo) tu[k]='Libre';
+        // Días de campaña: vacíos para que el usuario los rellene tocando
+      });
+    }
+  }
+  return tu;
+}
+
+function loadSaved(){
+  try{S.mb=JSON.parse(localStorage.getItem('r68_mb'))||[];}catch{S.mb=[];}
+  if(!S.mb.length){S.mb=DEFAULT_MB;save();}
+  try{S.tu=JSON.parse(localStorage.getItem('r68_tu'))||{};}catch{S.tu={};}
+  // Si no hay datos de turno, cargar plantilla SARCA 2026
+  if(!Object.keys(S.tu).length){S.tu=generarTurnosSARCA();save();}
+  const sq=localStorage.getItem('r68_sq');
+  if(sq){S.sq=sq;['simg','sip2'].forEach(id=>{document.getElementById(id).src=sq;document.getElementById(id).style.display='';});['semj','sej2'].forEach(id=>document.getElementById(id).style.display='none');}
+}
 
 loadSaved();loadData();setInterval(loadData,30*60*1000);
 </script>
