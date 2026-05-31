@@ -155,8 +155,9 @@ body{background:#0D1B2A;color:#fff;font-family:system-ui,-apple-system,sans-seri
 <script>
 const LAT=41.8493,LON=-1.5285;
 const R={1:{bg:'#0A2E1A',bc:'#1B5E20',tc:'#4CAF50',lb:'BAJO'},2:{bg:'#2E2A00',bc:'#F9A825',tc:'#FFD600',lb:'MODERADO'},3:{bg:'#2E1800',bc:'#E65100',tc:'#FF6D00',lb:'ALTO'},4:{bg:'#2E0000',bc:'#B71C1C',tc:'#FF1744',lb:'MUY ALTO'},5:{bg:'#1A0030',bc:'#6A1B9A',tc:'#CE93D8',lb:'EXTREMO'}};
-const TC={'L':'#2E7D32','Libre':'#37474F','V':'#6A1B9A','FM':'#F9A825','CF':'#1565C0','B':'#B71C1C','SUS':'#00838F'};
-const TT=['L','Libre','V','FM','CF','B','SUS'];
+// En el calendario SARCA: "L" = LIBRA (descansa). Sin marca = trabajando.
+const TC={'L':'#546E7A','V':'#6A1B9A','FM':'#F9A825','CF':'#1565C0','B':'#B71C1C','SUS':'#00838F'};
+const TT=['','L','V','FM','CF','B','SUS']; // '' = trabajando, 'L' = libra
 const WM={0:'Despejado',1:'Mayormente despejado',2:'Parcialmente nublado',3:'Nublado',45:'Niebla',51:'Llovizna',61:'Lluvia ligera',63:'Lluvia',80:'Chubascos',95:'Tormenta'};
 const DE=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 let S={h:null,d:null,nivel:null,da:null,mb:[],tu:{},sq:null,md:'hoy',sp:false};
@@ -265,14 +266,15 @@ function rTurnos(){
   const hoy=new Date().toISOString().slice(0,10),y=calYear,m=calMes,nd=new Date(y,m+1,0).getDate();
   const dias=Array.from({length:nd},(_,i)=>{const d=new Date(y,m,i+1);return{d:i+1,f:d.toISOString().slice(0,10),s:DE[d.getDay()===0?6:d.getDay()-1],h:d.toISOString().slice(0,10)===hoy};});
   let th='';
-  const LEY_LABELS2={'L':'Laborable','Libre':'Libre','V':'Vacaciones','FM':'Formación','CF':'Comp. Festivos','B':'Baja','SUS':'Sustitución'};
+  const ELABEL={'':'TRABAJANDO','L':'LIBRA','V':'Vacaciones','FM':'Formación','CF':'Comp.Fest.','B':'Baja','SUS':'Sustitución'};
+  const ECOLOR={'':'#2E7D32','L':'#546E7A','V':'#6A1B9A','FM':'#F9A825','CF':'#1565C0','B':'#B71C1C','SUS':'#00838F'};
   if(!S.mb.length)th='<p style="color:#4A6580;text-align:center;padding:18px;font-size:13px">Cargando cuadrilla...</p>';
-  else S.mb.forEach(m=>{const t=S.tu[m.id+'_'+hoy]||'',c=TC[t]||'#4A6580',lb=LEY_LABELS2[t]||'—';th+=`<div class="mcard">
+  else S.mb.forEach(m=>{const t=S.tu[m.id+'_'+hoy]??'',c=ECOLOR[t]||'#4A6580',lb=ELABEL[t]||t||'—';th+=`<div class="mcard">
     <div class="av">${m.f?`<img src="${m.f}" alt="">`:'👤'}</div>
     <div class="minfo" style="flex:1">
       <div class="mname">${m.nombre}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
-        <div class="tbadge" style="background:${c}33;border-color:${c||'#2A3F52'};color:${c||'#4A6580'}">${lb}</div>
+        <div class="tbadge" style="background:${c}33;border-color:${c};color:${c}">${lb}</div>
         ${m.tel1?`<a href="tel:${m.tel1}" style="color:#4FC3F7;font-size:12px;text-decoration:none">📞 ${m.tel1}</a>`:''}
       </div>
     </div>
@@ -295,9 +297,11 @@ function rTurnos(){
     dias.forEach(d=>{hrow+=`<div class="cdh${d.h?' hoy':''}"><div class="cdn" style="${d.h?'color:#E84118':''}">${d.d}</div><div class="cds">${d.s}</div></div>`;});
     hrow+='</div>';
     let brows='';
-    S.mb.forEach(m=>{let row=`<div class="crow"><div class="cname">${m.nombre.split(' ')[0]}</div>`;dias.forEach(d=>{const k=m.id+'_'+d.f,t=S.tu[k],c=TC[t];row+=`<div class="cc${d.h?' hoy':''}" onclick="togT('${m.id}','${d.f}')">${t?`<div class="cdot" style="background:${c}"></div>`:`<span style="color:#4A6580;font-size:12px">·</span>`}</div>`;});row+='</div>';brows+=row;});
-    const LEY_LABELS={'L':'Laborable','Libre':'Libre','V':'Vacaciones','FM':'Formación','CF':'Comp. Festivos','B':'Baja','SUS':'Sustitución'};
-    let ley='<div class="leyenda">';Object.entries(TC).forEach(([t,c])=>{ley+=`<div class="li"><div class="ldot" style="background:${c}"></div>${LEY_LABELS[t]||t}</div>`;});ley+='</div>';
+    S.mb.forEach(m=>{let row=`<div class="crow"><div class="cname">${m.nombre.split(' ')[0]}</div>`;dias.forEach(d=>{const k=m.id+'_'+d.f,t=S.tu[k]??'';const c=t===''?'#2E7D32':TC[t]||'#546E7A';const lbl=t===''?'·':t;row+=`<div class="cc${d.h?' hoy':''}" onclick="togT('${m.id}','${d.f}')" title="${t===''?'Trabajando':t}"><div class="cdot" style="background:${c};opacity:${t===''?0.5:1}"></div></div>`;});row+='</div>';brows+=row;});
+    const LEY_LABELS={'':'Trabajando','L':'Libra (L)','V':'Vacaciones','FM':'Formación','CF':'Comp.Fest.','B':'Baja','SUS':'Sustitución'};
+    const LEY_COLS={'':'#2E7D32','L':'#546E7A','V':'#6A1B9A','FM':'#F9A825','CF':'#1565C0','B':'#B71C1C','SUS':'#00838F'};
+    let ley='<div class="leyenda"><div class="li"><div class="ldot" style="background:#2E7D32"></div>Trabajando</div>';
+    Object.entries(TC).forEach(([t,c])=>{ley+=`<div class="li"><div class="ldot" style="background:${c}"></div>${LEY_LABELS[t]||t}</div>`;});ley+='</div>';
     cal=`<div class="lbl">CALENDARIO</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <button onclick="navMes(-1)" style="background:#1B2B3A;border:1px solid #2A3F52;color:#fff;border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer">◀</button>
@@ -331,9 +335,10 @@ function diasDesdeInicio(fechaStr){
 
 function estadoRotacion(fechaStr){
   const d=diasDesdeInicio(fechaStr);
-  if(d<0) return null; // antes del inicio
+  if(d<0) return null;
   const pos=d%ROT_CICLO;
-  return pos<ROT_TRABAJO?'L':'Libre';
+  return pos<ROT_TRABAJO?'':// trabajando = sin marca
+  'L';// librando = marca L
 }
 
 function infoRotacion(fechaStr){
@@ -378,11 +383,11 @@ function rOperativo(){
   const fechaLabel=fechaObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   const info=infoRotacion(f);
 
-  // Quién trabaja y quién libra según el calendario
+  // Sin marca = trabajando / Con L u otro = librando
   const trabajando=[], librando=[];
   S.mb.forEach(m=>{
-    const t=S.tu[m.id+'_'+f]||'';
-    if(t==='L') trabajando.push(m);
+    const t=S.tu[m.id+'_'+f]??'';
+    if(t==='') trabajando.push(m);
     else librando.push(m);
   });
 
@@ -468,7 +473,7 @@ function generarTurnosSARCA(){
       const esFestivo=FESTIVOS_2026.has(fStr);
       ids.forEach(id=>{
         const k=id+'_'+fStr;
-        if(fueraCamp||esDomingo||esFestivo) tu[k]='Libre';
+        if(fueraCamp||esDomingo||esFestivo) tu[k]='L';
         // Días de campaña: vacíos para que el usuario los rellene tocando
       });
     }
@@ -488,7 +493,7 @@ function loadSaved(){
 
 loadSaved();
 // Aplicar rotación 5+3 desde junio (solo si no está ya guardada)
-if(!localStorage.getItem('r68_rot53')){aplicarRotacion5x3();localStorage.setItem('r68_rot53','1');}
+if(localStorage.getItem('r68_rot53')!=='2'){aplicarRotacion5x3();localStorage.setItem('r68_rot53','2');}
 loadData();setInterval(loadData,30*60*1000);
 </script>
 </body>
