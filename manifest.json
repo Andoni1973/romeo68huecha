@@ -1,0 +1,24 @@
+{
+  "name": "Romeo 68 Huecha",
+  "short_name": "Romeo 68",
+  "description": "App de la cuadrilla de bomberos forestales Romeo 68 Huecha - Borja, Zaragoza",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0D1B2A",
+  "theme_color": "#0D1B2A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./parche.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./parche.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
