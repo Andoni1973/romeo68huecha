@@ -234,6 +234,44 @@ function rSalud(d){
   </div>`;
 }
 
+// Niveles de alerta 112 Aragón (PROCINFO - Plan de Protección Civil Aragón)
+const ALERTA_112=[
+  {nivel:0,lb:'SIN ALERTA',    color:'#FFFFFF',bg:'#1B2B3A',bc:'#2A3F52',emoji:'⚪',texto:'Condiciones normales. Riesgo bajo de incendio.'},
+  {nivel:1,lb:'ALERTA VERDE',  color:'#4CAF50',bg:'#0A2E1A',bc:'#2E7D32',emoji:'🟢',texto:'Precaución. Riesgo moderado. Vigilancia preventiva.'},
+  {nivel:2,lb:'ALERTA AMARILLA',color:'#FFD600',bg:'#2E2A00',bc:'#F9A825',emoji:'🟡',texto:'Riesgo alto. Posibles medidas preventivas activadas.'},
+  {nivel:3,lb:'ALERTA NARANJA',color:'#FF6D00',bg:'#2E1800',bc:'#E65100',emoji:'🟠',texto:'Riesgo muy alto. Cuadrillas en prealerta. Máxima vigilancia.'},
+  {nivel:4,lb:'ALERTA ROJA',   color:'#FF1744',bg:'#2E0000',bc:'#B71C1C',emoji:'🔴',texto:'EMERGENCIA. Riesgo extremo. Todos los medios activados.'},
+];
+
+function nivelA112(ipifNivel){
+  // Mapa directo IPIF → nivel alerta 112 Aragón
+  if(ipifNivel>=5)return 4;
+  if(ipifNivel>=4)return 3;
+  if(ipifNivel>=3)return 2;
+  if(ipifNivel>=2)return 1;
+  return 0;
+}
+
+function r112Card(ipifNivel){
+  const nv=nivelA112(ipifNivel);
+  const a=ALERTA_112[nv];
+  return `<div class="lbl">NIVEL ALERTA 112 ARAGÓN</div>
+  <div style="background:${a.bg};border:2px solid ${a.bc};border-radius:12px;padding:14px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:30px">${a.emoji}</span>
+        <div>
+          <div style="color:${a.color};font-weight:bold;font-size:16px;letter-spacing:1px">${a.lb}</div>
+          <div style="color:#8FA8BE;font-size:11px">Zona: Borja · Campo de Borja</div>
+        </div>
+      </div>
+      <a href="https://www.112aragon.es" target="_blank" style="background:#1B2B3A;border:1px solid #2A3F52;color:#4FC3F7;font-size:10px;font-weight:bold;padding:6px 10px;border-radius:7px;text-decoration:none;white-space:nowrap">VER OFICIAL →</a>
+    </div>
+    <div style="background:#00000033;border-radius:8px;padding:8px;color:#8FA8BE;font-size:11px;line-height:15px">${a.texto}</div>
+    <div style="color:#4A6580;font-size:9px;margin-top:6px">⚡ Calculado a partir de parámetros meteorológicos AEMET · Confirma siempre en 112aragon.es</div>
+  </div>`;
+}
+
 function rDash(){
   if(!S.da)return;
   const r=R[S.nivel],now=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
@@ -253,6 +291,7 @@ function rDash(){
       <div class="card"><div class="ci">🧭</div><div class="cv">${S.da.dir!=null?dt(S.da.dir):'—'}</div><div class="cl">Dirección</div></div>
     </div>
     <div class="cielo">⛅ ${S.da.sky}</div>
+    ${r112Card(S.nivel||1)}
     ${rSalud(S.da)}
     <div class="lbl">NIVELES DE REFERENCIA IPIF</div>
     <div class="sem">${sem}</div>`;
