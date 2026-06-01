@@ -166,17 +166,72 @@ const wm=c=>WM[c]||'Variable';
 const dt=g=>['N','NE','E','SE','S','SO','O','NO'][Math.round(g/45)%8];
 function cr(t,h,v){let p=0;if(t>=40)p+=4;else if(t>=35)p+=3;else if(t>=30)p+=2;else if(t>=25)p+=1;if(h<=15)p+=4;else if(h<=25)p+=3;else if(h<=35)p+=2;else if(h<=45)p+=1;if(v>=60)p+=4;else if(v>=40)p+=3;else if(v>=25)p+=2;else if(v>=15)p+=1;if(p>=10)return 5;if(p>=7)return 4;if(p>=5)return 3;if(p>=3)return 2;return 1;}
 
+// ── Meteosalud ─────────────────────────────────────────────────
+function nivelSalud(st, uv, t, hu){
+  let pts=0;
+  const sens=st??t??20;
+  if(sens>=46)pts+=4; else if(sens>=39)pts+=3; else if(sens>=32)pts+=2; else if(sens>=27)pts+=1;
+  const uvv=uv??0;
+  if(uvv>=11)pts+=4; else if(uvv>=8)pts+=3; else if(uvv>=6)pts+=2; else if(uvv>=3)pts+=1;
+  if((hu??50)<=20)pts+=1;
+  if(pts>=7)return 4; if(pts>=5)return 3; if(pts>=3)return 2; if(pts>=1)return 1; return 0;
+}
+const SALUD_NIV=[
+  {lb:'SIN RIESGO',  color:'#4CAF50',bg:'#0A2E1A',bc:'#1B5E20',ico:'🟢',desc:'Condiciones normales'},
+  {lb:'PRECAUCIÓN',  color:'#FFD600',bg:'#2E2A00',bc:'#F9A825',ico:'🟡',desc:'Hidratación frecuente'},
+  {lb:'RIESGO MODERADO',color:'#FF6D00',bg:'#2E1800',bc:'#E65100',ico:'🟠',desc:'Descansos y sombra'},
+  {lb:'RIESGO ALTO', color:'#FF1744',bg:'#2E0000',bc:'#B71C1C',ico:'🔴',desc:'Reducir esfuerzo físico'},
+  {lb:'RIESGO EXTREMO',color:'#CE93D8',bg:'#1A0030',bc:'#6A1B9A',ico:'🟣',desc:'No trabajar al aire libre'},
+];
+const UV_LABELS=['Bajo','Bajo','Bajo','Moderado','Moderado','Moderado','Alto','Alto','Muy alto','Muy alto','Muy alto','Extremo','Extremo','Extremo'];
+
 async function loadData(){
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weathercode,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,wind_speed_10m_max,precipitation_probability_max,weathercode&timezone=Europe%2FMadrid&forecast_days=7`;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weathercode,precipitation,apparent_temperature,uv_index&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,wind_speed_10m_max,precipitation_probability_max,weathercode&timezone=Europe%2FMadrid&forecast_days=7`;
     const res=await fetch(url);const j=await res.json();
     S.h=j.hourly;S.d=j.daily;
     const now=new Date(),h=now.getHours(),ts=now.toISOString().slice(0,10);
     let i=S.h.time.findIndex(t=>t.startsWith(ts)&&parseInt(t.slice(11,13))===h);if(i<0)i=0;
-    S.da={t:S.h.temperature_2m[i],hu:S.h.relative_humidity_2m[i],v:S.h.wind_speed_10m[i],dir:S.h.wind_direction_10m[i],sky:wm(S.h.weathercode[i])};
+    S.da={t:S.h.temperature_2m[i],hu:S.h.relative_humidity_2m[i],v:S.h.wind_speed_10m[i],dir:S.h.wind_direction_10m[i],sky:wm(S.h.weathercode[i]),st:S.h.apparent_temperature?.[i],uv:S.h.uv_index?.[i]};
     S.nivel=cr(S.da.t,S.da.hu,S.da.v);
     rDash();rMeteo();rPrev();
   }catch(e){document.getElementById('screen-dashboard').innerHTML='<div class="errbanner">⚠️ Sin conexión. Comprueba el internet.</div>';}
+}
+
+function rSalud(d){
+  if(!d) return '';
+  const nv=nivelSalud(d.st,d.uv,d.t,d.hu);
+  const s=SALUD_NIV[nv];
+  const uvNum=d.uv!=null?d.uv.toFixed(1):'—';
+  const uvLbl=d.uv!=null?(UV_LABELS[Math.min(Math.round(d.uv),13)]||'Extremo'):'—';
+  const stNum=d.st!=null?d.st.toFixed(1)+'°C':'—';
+  return `<div class="lbl">RIESGO METEOSALUD LABORAL</div>
+  <div style="background:${s.bg};border:2px solid ${s.bc};border-radius:12px;padding:14px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:26px">${s.ico}</span>
+      <div>
+        <div style="color:${s.color};font-weight:bold;font-size:15px;letter-spacing:1px">${s.lb}</div>
+        <div style="color:#8FA8BE;font-size:11px">${s.desc}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="background:#00000033;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:18px">🌡️</div>
+        <div style="color:#fff;font-size:15px;font-weight:bold">${stNum}</div>
+        <div style="color:#8FA8BE;font-size:9px">Sensación</div>
+      </div>
+      <div style="background:#00000033;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:18px">☀️</div>
+        <div style="color:#fff;font-size:15px;font-weight:bold">${uvNum}</div>
+        <div style="color:#8FA8BE;font-size:9px">UV · ${uvLbl}</div>
+      </div>
+      <div style="background:#00000033;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:18px">💧</div>
+        <div style="color:#fff;font-size:15px;font-weight:bold">${d.hu??'—'}%</div>
+        <div style="color:#8FA8BE;font-size:9px">Humedad</div>
+      </div>
+    </div>
+  </div>`;
 }
 
 function rDash(){
@@ -198,7 +253,8 @@ function rDash(){
       <div class="card"><div class="ci">🧭</div><div class="cv">${S.da.dir!=null?dt(S.da.dir):'—'}</div><div class="cl">Dirección</div></div>
     </div>
     <div class="cielo">⛅ ${S.da.sky}</div>
-    <div class="lbl">NIVELES DE REFERENCIA</div>
+    ${rSalud(S.da)}
+    <div class="lbl">NIVELES DE REFERENCIA IPIF</div>
     <div class="sem">${sem}</div>`;
 }
 
