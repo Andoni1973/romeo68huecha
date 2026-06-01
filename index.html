@@ -272,29 +272,128 @@ function r112Card(ipifNivel){
   </div>`;
 }
 
+function semaforo(items, activo){
+  return '<div class="sem">'+items.map((it,i)=>{
+    const a=i===activo;
+    return `<div class="si" style="border-color:${it.bc||it.color};background:${a?it.bg:'#1B2B3A'}">
+      <div class="sd" style="background:${it.tc||it.color};opacity:${a?1:.3}"></div>
+      <div class="sl" style="color:${a?it.tc||it.color:'#4A6580'}">${it.lb}</div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
 function rDash(){
   if(!S.da)return;
-  const r=R[S.nivel],now=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-  let sem='';for(let n=1;n<=5;n++){const sr=R[n],a=n===S.nivel;sem+=`<div class="si" style="border-color:${sr.bc};background:${a?sr.bg:'#1B2B3A'}"><div class="sd" style="background:${sr.tc};opacity:${a?1:.3}"></div><div class="sl" style="color:${a?sr.tc:'#4A6580'}">${sr.lb}</div></div>`;}
+  const r=R[S.nivel||1];
+  const now=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  const nv112=nivelA112(S.nivel||1);
+  const a112=ALERTA_112[nv112];
+  const nvS=nivelSalud(S.da.st,S.da.uv,S.da.t,S.da.hu);
+  const sS=SALUD_NIV[nvS];
+  const uvNum=S.da.uv!=null?S.da.uv.toFixed(1):'—';
+  const uvLbl=S.da.uv!=null?(UV_LABELS[Math.min(Math.round(S.da.uv),13)]||'Extremo'):'—';
+  const stNum=S.da.st!=null?S.da.st.toFixed(1)+'°C':'—';
+
+  // Semáforo IPIF
+  const semIPIF=semaforo(Object.values(R),(S.nivel||1)-1);
+  // Semáforo Meteosalud
+  const semSalud=semaforo(SALUD_NIV,nvS);
+  // Semáforo 112
+  const sem112=semaforo(ALERTA_112.map(a=>({...a,tc:a.color,bc:a.bc,bg:a.bg,lb:a.lb.replace('ALERTA ','').replace('SIN ','SIN ')})),nv112);
+
   document.getElementById('screen-dashboard').innerHTML=`
-    <div class="lbl">ÍNDICE DE PELIGRO (IPIF)</div>
-    <div class="risk-box" style="background:${r.bg};border-color:${r.bc};margin-bottom:8px">
+
+    <!-- ── IPIF ── -->
+    <div class="lbl">ÍNDICE DE PELIGRO DE INCENDIO (IPIF)</div>
+    <div class="risk-box" style="background:${r.bg};border-color:${r.bc};margin-bottom:6px">
       <div class="risk-title" style="color:${r.tc}">${r.lb}</div>
-      <div class="risk-sub" style="color:${r.tc}">Nivel ${S.nivel} / 5</div>
+      <div class="risk-sub" style="color:${r.tc}">Nivel ${S.nivel||1} / 5 · Actualizado ${now}</div>
     </div>
-    <div style="color:#4A6580;font-size:10px;text-align:center;margin-bottom:14px">Actualizado: ${now}</div>
-    <div class="lbl">CONDICIONES ACTUALES</div>
-    <div class="grid2">
+    <div class="grid2" style="margin-bottom:6px">
       <div class="card"><div class="ci">🌡️</div><div class="cv">${S.da.t?.toFixed(1)??'—'}<span class="cu">°C</span></div><div class="cl">Temperatura</div></div>
       <div class="card"><div class="ci">💧</div><div class="cv">${S.da.hu??'—'}<span class="cu">%</span></div><div class="cl">Humedad</div></div>
       <div class="card"><div class="ci">💨</div><div class="cv">${S.da.v??'—'}<span class="cu"> km/h</span></div><div class="cl">Viento</div></div>
       <div class="card"><div class="ci">🧭</div><div class="cv">${S.da.dir!=null?dt(S.da.dir):'—'}</div><div class="cl">Dirección</div></div>
     </div>
-    <div class="cielo">⛅ ${S.da.sky}</div>
-    ${r112Card(S.nivel||1)}
-    ${rSalud(S.da)}
-    <div class="lbl">NIVELES DE REFERENCIA IPIF</div>
-    <div class="sem">${sem}</div>`;
+    <div class="cielo" style="margin-bottom:8px">⛅ ${S.da.sky}</div>
+    <div class="lbl" style="margin-top:4px">NIVELES DE REFERENCIA IPIF</div>
+    ${semIPIF}
+
+    <div style="border-top:1px solid #2A3F52;margin:14px 0 2px"></div>
+
+    <!-- ── METEOSALUD ── -->
+    <div class="lbl">ÍNDICE METEOSALUD LABORAL</div>
+    <div style="background:${sS.bg};border:2px solid ${sS.bc};border-radius:12px;padding:12px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:24px">${sS.ico}</span>
+        <div>
+          <div style="color:${sS.color};font-weight:bold;font-size:14px;letter-spacing:1px">${sS.lb}</div>
+          <div style="color:#8FA8BE;font-size:10px">${sS.desc}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <div style="background:#00000033;border-radius:7px;padding:7px;text-align:center">
+          <div>🌡️</div><div style="color:#fff;font-size:14px;font-weight:bold">${stNum}</div>
+          <div style="color:#8FA8BE;font-size:8px">Sensación</div>
+        </div>
+        <div style="background:#00000033;border-radius:7px;padding:7px;text-align:center">
+          <div>☀️</div><div style="color:#fff;font-size:14px;font-weight:bold">${uvNum}</div>
+          <div style="color:#8FA8BE;font-size:8px">UV · ${uvLbl}</div>
+        </div>
+        <div style="background:#00000033;border-radius:7px;padding:7px;text-align:center">
+          <div>💧</div><div style="color:#fff;font-size:14px;font-weight:bold">${S.da.hu??'—'}%</div>
+          <div style="color:#8FA8BE;font-size:8px">Humedad</div>
+        </div>
+      </div>
+    </div>
+    <div class="lbl" style="margin-top:4px">NIVELES DE REFERENCIA METEOSALUD</div>
+    ${semSalud}
+
+    <div style="border-top:1px solid #2A3F52;margin:14px 0 2px"></div>
+
+    <!-- ── AVISOS AEMET ── -->
+    <div class="lbl">AVISOS AEMET — ZARAGOZA</div>
+    <div style="background:#1B2B3A;border:1px solid #2A3F52;border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:22px">📡</span>
+          <div>
+            <div style="color:#fff;font-weight:bold;font-size:13px">AEMET OpenData</div>
+            <div style="color:#8FA8BE;font-size:10px">Avisos meteorológicos en vigor</div>
+          </div>
+        </div>
+        <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos?p=50" target="_blank"
+           style="background:#0D1B2A;border:1px solid #2A3F52;color:#4FC3F7;font-size:10px;font-weight:bold;padding:5px 9px;border-radius:6px;text-decoration:none">VER →</a>
+      </div>
+      <img src="https://www.aemet.es/imagenes_d/eltiempo/prediccion/incendios/hoy/riesgo_estimado_peninsula.gif"
+           style="width:100%;border-radius:8px;margin-bottom:4px" alt="Mapa IPIF AEMET"
+           onerror="this.style.display='none'">
+      <div style="color:#4A6580;font-size:9px;text-align:center">Mapa peligro estimado hoy · Fuente: AEMET</div>
+    </div>
+
+    <div style="border-top:1px solid #2A3F52;margin:14px 0 2px"></div>
+
+    <!-- ── 112 ARAGÓN ── -->
+    <div class="lbl">NIVEL ALERTA 112 ARAGÓN</div>
+    <div style="background:${a112.bg};border:2px solid ${a112.bc};border-radius:12px;padding:12px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:28px">${a112.emoji}</span>
+          <div>
+            <div style="color:${a112.color};font-weight:bold;font-size:15px;letter-spacing:1px">${a112.lb}</div>
+            <div style="color:#8FA8BE;font-size:10px">Zona: Borja · Campo de Borja</div>
+          </div>
+        </div>
+        <a href="https://www.112aragon.es" target="_blank"
+           style="background:#0D1B2A;border:1px solid #2A3F52;color:#4FC3F7;font-size:10px;font-weight:bold;padding:5px 9px;border-radius:6px;text-decoration:none;white-space:nowrap">VER OFICIAL →</a>
+      </div>
+      <div style="background:#00000033;border-radius:8px;padding:8px;color:#8FA8BE;font-size:10px;line-height:14px">${a112.texto}</div>
+      <div style="color:#4A6580;font-size:8px;margin-top:5px">⚡ Estimación basada en parámetros AEMET · Confirma en 112aragon.es</div>
+    </div>
+    <div class="lbl" style="margin-top:4px">NIVELES DE REFERENCIA 112 ARAGÓN</div>
+    ${sem112}
+
+    <div style="height:20px"></div>`;
 }
 
 function rMeteo(){
